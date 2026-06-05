@@ -6,8 +6,8 @@ settings:
   base:
     SWIFT_VERSION: "5.0"
     PRODUCT_BUNDLE_IDENTIFIER: cn.creditcard.archive
-    MARKETING_VERSION: "0.1.1"
-    CURRENT_PROJECT_VERSION: "2"
+    MARKETING_VERSION: "0.1.2"
+    CURRENT_PROJECT_VERSION: "3"
     CODE_SIGN_STYLE: Manual
     CODE_SIGNING_ALLOWED: "NO"
     CODE_SIGNING_REQUIRED: "NO"
@@ -21,9 +21,5 @@ targets:
     sources:
       - CreditCardArchive/AppDelegate.swift
       - CreditCardArchive/WebViewController.swift
-    resources:
-      - CreditCardArchive/www/index.html
-      - CreditCardArchive/www/styles.css
-      - CreditCardArchive/www/app.js
     info:
       path: CreditCardArchive/Info.plist
