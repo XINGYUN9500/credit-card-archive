@@ -49,12 +49,14 @@ jobs:
       - name: Inspect app bundle
         run: |
           APP=build/ios/Build/Products/Release-iphoneos/CreditCardArchive.app
+          echo "Bundle version:"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist"
           /usr/libexec/PlistBuddy -c 'Print :UILaunchStoryboardName' "$APP/Info.plist"
+          echo "Bundle files:"
+          find "$APP" -maxdepth 3 -print | sort
           test -f "$APP/Assets.car"
-          test -d "$APP/Base.lproj"
-          find "$APP" -maxdepth 2 -type f | sort
+          find "$APP" -name 'LaunchScreen.storyboardc' -print -quit | grep -q LaunchScreen
 
       - name: Upload build log on failure
         if: failure()
