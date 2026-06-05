@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>信用卡档案</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <h1>信用卡档案</h1>
+          <p id="buildText">iOS IPA 测试版</p>
+        </div>
+        <button id="addCardBtn" type="button">新增</button>
+      </header>
+
+      <nav class="tabs">
+        <button class="tab active" data-view="cards" type="button">档案</button>
+        <button class="tab" data-view="reminders" type="button">提醒</button>
+        <button class="tab" data-view="usage" type="button">用卡</button>
+        <button class="tab" data-view="data" type="button">数据</button>
+      </nav>
+
+      <section class="panel active" id="cardsView">
+        <div class="toolbar">
+          <input id="searchInput" type="search" placeholder="搜索银行、卡名、尾号" />
+          <select id="sortMode">
+            <option value="best">智能排序</option>
+            <option value="statement">按账单日</option>
+            <option value="payment">按还款日</option>
+            <option value="cashback">只看返利卡</option>
+          </select>
+        </div>
+        <div id="cardList" class="list"></div>
+      </section>
+
+      <section class="panel" id="remindersView">
+        <div id="reminderList" class="list"></div>
+      </section>
+
+      <section class="panel" id="usageView">
+        <div id="usageList" class="list"></div>
+      </section>
+
+      <section class="panel" id="dataView">
+        <div class="data-actions">
+          <button id="copyBtn" type="button">复制 JSON</button>
+          <button id="pasteBtn" type="button">粘贴导入</button>
+          <button id="resetBtn" type="button">清空</button>
+        </div>
+        <textarea id="dataBox" spellcheck="false"></textarea>
+      </section>
+    </main>
+
+    <dialog id="cardDialog">
+      <form id="cardForm" method="dialog">
+        <div class="dialog-head">
+          <h2>卡片档案</h2>
+          <button id="closeDialogBtn" type="button">×</button>
+        </div>
+        <input id="cardId" type="hidden" />
+        <label>银行<input id="bank" required placeholder="例如 中信银行" /></label>
+        <label>卡名<input id="cardName" required placeholder="例如 VISA Signature" /></label>
+        <label>尾号<input id="last4" maxlength="4" inputmode="numeric" /></label>
+        <label>账单日<input id="statementDay" type="number" min="1" max="31" /></label>
+        <label>还款日<input id="paymentDay" type="number" min="1" max="31" /></label>
+        <label>年费日<input id="annualFeeDate" type="date" /></label>
+        <label>提醒提前天数<input id="reminderLeadDays" type="number" min="0" max="30" placeholder="默认2天" /></label>
+        <label>提醒时间<input id="reminderTime" type="time" value="10:00" /></label>
+        <label>返利类型<input id="cashbackType" placeholder="例如 现金返现 / 账单抵扣" /></label>
+        <label>返利比例<input id="cashbackRate" placeholder="例如 1.5% / 满300返30" /></label>
+        <label>适合用途<input id="useTags" placeholder="大额, 境外, 酒店" /></label>
+        <label>新旧卡关联<textarea id="replacement" placeholder="只做档案线索，不进入提醒"></textarea></label>
+        <label>备注<textarea id="notes"></textarea></label>
+        <div class="dialog-actions">
+          <button id="cancelBtn" type="button">取消</button>
+          <button type="submit">保存</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
