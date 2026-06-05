@@ -1,65 +1,144 @@
-const STORAGE_KEY = 'credit-card-profile-v1';
-const BUILD = window.APP_BUILD || 'apk-test';
+const STORAGE_KEY = "credit-card-profile-v1";
+const BUILD = window.APP_BUILD || "apk";
+
 let state = loadState();
-let activeView = 'cards';
 
-const qs = (id) => document.querySelector(id);
 const els = {
-  todayText: qs('#todayText'), tabs: document.querySelectorAll('.tab'), summaryStrip: qs('#summaryStrip'), recommendationCard: qs('#recommendationCard'),
-  searchInput: qs('#searchInput'), statusFilter: qs('#statusFilter'), sortMode: qs('#sortMode'), cardList: qs('#cardList'), cardCount: qs('#cardCount'),
-  remindersList: qs('#remindersList'), scenarioList: qs('#scenarioList'), campaignList: qs('#campaignList'), dataPreview: qs('#dataPreview'),
-  addCardBtn: qs('#addCardBtn'), addCampaignBtn: qs('#addCampaignBtn'), exportBtn: qs('#exportBtn'), importInput: qs('#importInput'), resetBtn: qs('#resetBtn'),
-  cardDialog: qs('#cardDialog'), cardForm: qs('#cardForm'), campaignDialog: qs('#campaignDialog'), campaignForm: qs('#campaignForm')
+  todayText: document.querySelector("#todayText"),
+  tabs: document.querySelectorAll(".tab"),
+  summaryStrip: document.querySelector("#summaryStrip"),
+  recommendationCard: document.querySelector("#recommendationCard"),
+  searchInput: document.querySelector("#searchInput"),
+  statusFilter: document.querySelector("#statusFilter"),
+  sortMode: document.querySelector("#sortMode"),
+  cardList: document.querySelector("#cardList"),
+  cardCount: document.querySelector("#cardCount"),
+  remindersList: document.querySelector("#remindersList"),
+  scenarioList: document.querySelector("#scenarioList"),
+  campaignList: document.querySelector("#campaignList"),
+  dataPreview: document.querySelector("#dataPreview"),
+  addCardBtn: document.querySelector("#addCardBtn"),
+  addCampaignBtn: document.querySelector("#addCampaignBtn"),
+  exportBtn: document.querySelector("#exportBtn"),
+  importInput: document.querySelector("#importInput"),
+  resetBtn: document.querySelector("#resetBtn"),
+  cardDialog: document.querySelector("#cardDialog"),
+  cardForm: document.querySelector("#cardForm"),
+  campaignDialog: document.querySelector("#campaignDialog"),
+  campaignForm: document.querySelector("#campaignForm")
 };
-const cardIds = ['cardId','bank','cardName','network','spendingCurrency','last4','holder','status','statementDay','paymentDay','annualFeeDay','annualFeeRule','creditLimit','currency','useTags','avoidTags','bindings','replacement','notes','cashbackType','cashbackRate','rewardProgram','benefitResetCycle','campaignTags','autoPayList','paymentSetup','oldLast4','newLast4','replacementReason','riskStatus','refundTracking','disputeTracking','cardControls','accountType','cardLevel','openDate','approvalDate','closeDate','actionBeforeDate','annualFeeAmount','firstYearFee','cardActionPlan','retentionOffer','rewardType','pointsBalanceNote','pointsExpiryRule','signupBonus','bonusReceivedDate','msrAmount','msrDeadline','msrProgress','referralInfo','earnRules','excludedRules','currentPurchasePlan','lastBenefitUsedDate','activationNeeded','physicalLocation','benefitCredits'];
-const cardFields = Object.fromEntries(cardIds.map((id) => [id, qs('#' + id)]));
-const campaignIds = ['campaignId','campaignName','campaignSource','campaignStart','campaignEnd','campaignCards','campaignRule','campaignStatus'];
-const campaignFields = Object.fromEntries(campaignIds.map((id) => [id, qs('#' + id)]));
 
-function makeId(){ return crypto?.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2); }
-function loadState(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {cards:[], campaigns:[]}; } catch { return {cards:[], campaigns:[]}; } }
-function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state, null, 2)); }
-function esc(v){ return String(v ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
-function tags(v){ return Array.isArray(v) ? v : String(v||'').split(/[,，、;；\s]+/).map(x=>x.trim()).filter(Boolean); }
-function text(...v){ return v.flat().join(' ').toLowerCase(); }
-function parseMoney(v){ const m = String(v||'').replaceAll(',','').match(/\d+(\.\d+)?/); return m ? Number(m[0]) : 0; }
-function nextMonthly(day){ if(!day) return null; const n=new Date(); n.setHours(0,0,0,0); let d=new Date(n.getFullYear(), n.getMonth(), Math.min(Number(day), 28)); if(d<n) d=new Date(n.getFullYear(), n.getMonth()+1, Math.min(Number(day),28)); return d; }
-function daysUntil(d){ return d ? Math.round((d - new Date().setHours(0,0,0,0))/86400000) : 9999; }
-function fmt(d){ return d ? `${d.getMonth()+1}月${d.getDate()}日` : '未设置'; }
-function defaultCurrency(network){ return network === '银联' ? '人民币' : ['Visa','Mastercard','Amex','JCB'].includes(network) ? '美元' : ''; }
-function cardName(c){ return c?.name || '未命名卡片'; }
-function isCashback(c){ const t=text(c.cashbackType,c.cashbackRate,c.rewardType,c.useTags); return t.includes('返利')||t.includes('返现')||t.includes('cashback')||t.includes('账单抵扣')||t.includes('现金'); }
-function cashbackScore(c){ return (isCashback(c)?100:0) + parseMoney(c.cashbackRate); }
-function campaignFor(c){ return state.campaigns.find(a => a.cards && text(a.cards).includes(text(c.bank).trim()) || a.cards && c.last4 && a.cards.includes(c.last4)); }
-function cardScore(c, scenario=''){
-  if(!['正常','备用'].includes(c.status)) return -999;
-  let s = 0;
-  const t = text(c.useTags,c.bank,c.name,c.network,c.cashbackType,c.rewardProgram,c.currentPurchasePlan);
-  if(scenario && t.includes(scenario.toLowerCase())) s += 50;
-  if(daysUntil(nextMonthly(c.statementDay)) >= 20) s += 25;
-  if(daysUntil(nextMonthly(c.paymentDay)) >= 18) s += 20;
-  if(!scenario && campaignFor(c)) s += 20;
-  if(!scenario && isCashback(c)) s += 20;
-  return s;
+const cardFieldIds = ["cardId", "bank", "cardName", "network", "spendingCurrency", "last4", "holder", "status", "statementDay", "paymentDay", "annualFeeDay", "annualFeeRule", "creditLimit", "currency", "useTags", "avoidTags", "bindings", "replacement", "notes", "cashbackType", "cashbackRate", "rewardProgram", "benefitResetCycle"];
+const cardFields = Object.fromEntries(cardFieldIds.map((id) => [id, document.querySelector(`#${id}`)]));
+const campaignFields = Object.fromEntries(["campaignId", "campaignName", "campaignSource", "campaignStart", "campaignEnd", "campaignCards", "campaignRule", "campaignStatus"].map((id) => [id, document.querySelector(`#${id}`)]));
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { cards: [], campaigns: [] };
 }
-function creditSummary(){ const map=new Map(); state.cards.filter(c=>!c.archivedOld&&c.status!=='已注销').forEach(c=>{ const v=parseMoney(c.creditLimit); if(v) map.set(c.bank||'未填写银行', Math.max(map.get(c.bank)||0, v)); }); return [...map.values()].reduce((a,b)=>a+b,0); }
 
-function renderSummary(){ const total=creditSummary(); els.summaryStrip.innerHTML=`<div class="summary-item"><span>本人总额度</span><strong>${total?total.toLocaleString('zh-CN')+' CNY':'未录入'}</strong><small>同一银行只取最高额度</small></div><div class="summary-item"><span>有效卡片</span><strong>${state.cards.filter(c=>!c.archivedOld&&c.status!=='已注销').length} 张</strong><small>不含隐藏旧卡/注销卡</small></div><div class="summary-item"><span>卡片活动</span><strong>${state.campaigns.length} 个</strong><small>需绑定到具体卡</small></div>`; }
-function filteredCards(){ const kw=els.searchInput.value.trim().toLowerCase(); return state.cards.filter(c=>{ const okStatus=els.statusFilter.value==='all'||c.status===els.statusFilter.value; const okCash=els.sortMode.value!=='cashback'||isCashback(c); const body=text(c.bank,c.name,c.last4,c.useTags,c.notes,c.bindings,c.rewardProgram,c.cashbackType,c.cashbackRate); return okStatus&&okCash&&(!kw||body.includes(kw)); }).sort((a,b)=>{ const m=els.sortMode.value; if(m==='payment') return Number(a.paymentDay||99)-Number(b.paymentDay||99); if(m==='statement'||m==='statementBest') return Number(a.statementDay||99)-Number(b.statementDay||99); if(m==='creditLimit') return parseMoney(b.creditLimit)-parseMoney(a.creditLimit); if(m==='cashback') return cashbackScore(b)-cashbackScore(a); return cardScore(b)-cardScore(a); }); }
-function renderCards(){ const cards=filteredCards(); els.cardCount.textContent=cards.length+' 张'; els.cardList.innerHTML=cards.length?cards.map(c=>`<article class="credit-card"><div class="card-top"><div><div class="bank-name">${esc(c.bank||'未填写银行')}</div><div class="card-title">${esc(cardName(c))}</div><div class="card-subtitle">${esc(c.network||'卡组织')} · 尾号 ${esc(c.last4||'未填')}</div></div><span class="status-pill">${esc(c.status||'正常')}</span></div><div class="metrics"><div class="metric"><span>账单日</span><strong>${c.statementDay||'未设'}${c.statementDay?'日':''}</strong></div><div class="metric"><span>还款日</span><strong>${c.paymentDay||'未设'}${c.paymentDay?'日':''}</strong></div><div class="metric"><span>年费</span><strong>${esc(c.annualFeeRule||'未设')}</strong></div></div><div class="tag-row">${tags(c.useTags).map(t=>`<span class="tag">${esc(t)}</span>`).join('')||'<span class="tag">未设置用途</span>'}</div><div class="note-block">${esc(c.bindings||c.notes||'暂无备注')}</div><div class="note-block">返利：${esc(c.cashbackType||'未设置')} ${esc(c.cashbackRate||'')} · 额度：${esc(c.creditLimit||'未设置')} ${esc(c.currency||'')}</div><div class="note-block">消费/结算货币：${esc(c.spendingCurrency||defaultCurrency(c.network))}</div><div class="card-actions"><button class="small-btn" data-action="edit-card" data-id="${c.id}">编辑</button><button class="small-btn" data-action="add-campaign-for-card" data-id="${c.id}">添加活动</button><button class="small-btn" data-action="copy-card" data-id="${c.id}">复制档案</button><button class="small-btn danger-text" data-action="delete-card" data-id="${c.id}">删除</button></div></article>`).join(''):'<div class="empty">暂无卡片</div>'; }
-function renderRecommendation(){ const best=[...state.cards].filter(c=>['正常','备用'].includes(c.status)).sort((a,b)=>cardScore(b)-cardScore(a))[0]; els.recommendationCard.innerHTML=best?`<div><div class="recommend-title">今日适合用卡</div><h2>${esc(best.bank)}</h2><div class="recommend-card-name">${esc(cardName(best))} · 尾号 ${esc(best.last4||'未填')}</div></div><div class="reason-list"><span class="reason-chip">距还款约 ${daysUntil(nextMonthly(best.paymentDay))} 天</span>${isCashback(best)?'<span class="reason-chip">返利卡</span>':''}</div>`:`<div><div class="recommend-title">今日适合用卡</div><h2>暂无推荐</h2><div class="recommend-card-name">先新增卡片</div></div>`; }
-function renderReminders(){ const arr=[]; state.cards.forEach(c=>{ if(c.paymentDay) arr.push({type:'还款',date:nextMonthly(c.paymentDay),title:`${c.bank} ${cardName(c)} 还款日`,meta:'确认是否已还款'}); if(c.statementDay) arr.push({type:'账单',date:nextMonthly(c.statementDay),title:`${c.bank} ${cardName(c)} 账单日`,meta:'账单日后更适合拉长周期'}); }); state.campaigns.forEach(a=>{ if(a.end) arr.push({type:'活动',date:new Date(a.end+'T00:00:00'),title:`${a.name} 结束`,meta:a.rule||a.cards}); }); arr.sort((a,b)=>a.date-b.date); els.remindersList.innerHTML=arr.length?arr.map(x=>`<article class="timeline-item"><div class="date-badge"><strong>${fmt(x.date)}</strong><span>${daysUntil(x.date)}天后</span></div><div><div class="timeline-title">${esc(x.title)}</div><div class="timeline-meta">${esc(x.meta)}</div></div><span class="status-pill">${esc(x.type)}</span></article>`).join(''):'<div class="empty">暂无提醒</div>'; }
-function renderUsage(){ const scenarios=['大额','最长还款','返利','里程','境外','网购','酒店','机票','餐饮']; els.scenarioList.innerHTML=scenarios.map(sc=>{ const list=[...state.cards].filter(c=>['正常','备用'].includes(c.status)).sort((a,b)=> sc==='返利'?cashbackScore(b)-cashbackScore(a):sc==='最长还款'?daysUntil(nextMonthly(b.paymentDay))-daysUntil(nextMonthly(a.paymentDay)):cardScore(b,sc)-cardScore(a,sc)).slice(0,3); return `<article class="scenario-card"><h3>${sc}</h3><p>根据卡片档案字段筛选。</p>${list.map(c=>`<div class="credit-mini"><strong>${esc(c.bank)} ${esc(cardName(c))} · ${esc(c.last4||'未填')}</strong><p>${esc(tags(c.useTags).join('；')||'备选')}</p></div>`).join('')}</article>`; }).join(''); }
-function renderCampaigns(){ els.campaignList.innerHTML=state.campaigns.length?state.campaigns.map(a=>`<article class="campaign-card"><div><h3>${esc(a.name)}</h3><p>${esc(a.source||'活动')} · ${esc(a.cards||'未设置适用卡')}</p><p>${esc(a.rule||'暂无规则')}</p><div class="tag-row"><span class="tag">${esc(a.start||'未设开始')} 至 ${esc(a.end||'未设结束')}</span><span class="tag">${esc(a.status||'未用')}</span></div></div><div class="campaign-actions"><button class="small-btn" data-action="edit-campaign" data-id="${a.id}">编辑</button></div></article>`).join(''):'<div class="empty">暂无活动，先在具体卡片下添加活动</div>'; }
-function renderData(){ els.dataPreview.value=JSON.stringify(state,null,2); }
-function render(){ els.todayText.textContent=`${new Date().toLocaleDateString('zh-CN')} · Android测试版 ${BUILD}`; renderSummary(); renderRecommendation(); renderCards(); renderReminders(); renderUsage(); renderCampaigns(); renderData(); saveState(); }
-function setView(view){ activeView=view; document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); qs('#'+view+'View').classList.add('active'); els.tabs.forEach(t=>t.classList.toggle('active',t.dataset.view===view)); }
-function openCardDialog(c=null){ cardFields.cardId.value=c?.id||''; cardFields.bank.value=c?.bank||''; cardFields.cardName.value=c?.name||''; cardFields.network.value=c?.network||'Visa'; cardFields.spendingCurrency.value=c?.spendingCurrency||defaultCurrency(c?.network); cardFields.last4.value=c?.last4||''; cardFields.holder.value=c?.holder||'本人'; cardFields.status.value=c?.status||'正常'; cardFields.statementDay.value=c?.statementDay||''; cardFields.paymentDay.value=c?.paymentDay||''; cardFields.annualFeeDay.value=c?.annualFeeDate||''; cardFields.annualFeeRule.value=c?.annualFeeRule||'终身免年费'; cardFields.creditLimit.value=c?.creditLimit||''; cardFields.currency.value=c?.currency||'CNY'; cardFields.useTags.value=tags(c?.useTags).join(', '); cardFields.bindings.value=c?.bindings||''; cardFields.notes.value=c?.notes||''; cardFields.cashbackType.value=c?.cashbackType||''; cardFields.cashbackRate.value=c?.cashbackRate||''; els.cardDialog.showModal(); }
-function saveCard(){ const id=cardFields.cardId.value||makeId(); const c={id,bank:cardFields.bank.value.trim(),name:cardFields.cardName.value.trim(),network:cardFields.network.value,last4:cardFields.last4.value.trim().slice(-4),holder:cardFields.holder.value.trim()||'本人',status:cardFields.status.value,statementDay:Number(cardFields.statementDay.value)||'',paymentDay:Number(cardFields.paymentDay.value)||'',annualFeeDate:cardFields.annualFeeDay.value,annualFeeRule:cardFields.annualFeeRule.value,creditLimit:cardFields.creditLimit.value.trim(),currency:cardFields.currency.value.trim(),spendingCurrency:cardFields.spendingCurrency.value.trim(),useTags:tags(cardFields.useTags.value),bindings:cardFields.bindings.value.trim(),notes:cardFields.notes.value.trim(),cashbackType:cardFields.cashbackType.value.trim(),cashbackRate:cardFields.cashbackRate.value.trim(),updatedAt:new Date().toISOString()}; const i=state.cards.findIndex(x=>x.id===id); if(i>=0) state.cards[i]={...state.cards[i],...c}; else state.cards.unshift({...c,createdAt:new Date().toISOString()}); render(); }
-function openCampaignDialog(a=null){ campaignFields.campaignId.value=a?.id||''; campaignFields.campaignName.value=a?.name||''; campaignFields.campaignSource.value=a?.source||''; campaignFields.campaignStart.value=a?.start||''; campaignFields.campaignEnd.value=a?.end||''; campaignFields.campaignCards.value=a?.cards||''; campaignFields.campaignRule.value=a?.rule||''; campaignFields.campaignStatus.value=a?.status||'未用'; els.campaignDialog.showModal(); }
-function saveCampaign(){ if(!campaignFields.campaignCards.value.trim()) return alert('请填写适用卡'); const id=campaignFields.campaignId.value||makeId(); const a={id,name:campaignFields.campaignName.value.trim(),source:campaignFields.campaignSource.value.trim(),start:campaignFields.campaignStart.value,end:campaignFields.campaignEnd.value,cards:campaignFields.campaignCards.value.trim(),rule:campaignFields.campaignRule.value.trim(),status:campaignFields.campaignStatus.value}; const i=state.campaigns.findIndex(x=>x.id===id); if(i>=0) state.campaigns[i]=a; else state.campaigns.unshift(a); render(); }
-els.tabs.forEach(t=>t.addEventListener('click',()=>setView(t.dataset.view))); els.searchInput.addEventListener('input',renderCards); els.statusFilter.addEventListener('change',renderCards); els.sortMode.addEventListener('change',renderCards); document.querySelectorAll('.quick-view').forEach(b=>b.addEventListener('click',()=>{els.sortMode.value=b.dataset.sort; setView('cards'); renderCards();})); els.addCardBtn.addEventListener('click',()=>openCardDialog()); els.addCampaignBtn.addEventListener('click',()=>openCampaignDialog());
-els.cardForm.addEventListener('submit',e=>{ if(e.submitter?.value==='cancel') return; e.preventDefault(); saveCard(); els.cardDialog.close(); }); els.campaignForm.addEventListener('submit',e=>{ if(e.submitter?.value==='cancel') return; e.preventDefault(); saveCampaign(); els.campaignDialog.close(); });
-document.addEventListener('click',e=>{ const b=e.target.closest('[data-action]'); if(!b) return; const id=b.dataset.id; if(b.dataset.action==='edit-card') openCardDialog(state.cards.find(c=>c.id===id)); if(b.dataset.action==='copy-card'){ const c=state.cards.find(x=>x.id===id); if(c){state.cards.unshift({...c,id:makeId(),name:c.name+' 副本',last4:''}); render();}} if(b.dataset.action==='delete-card'){ if(confirm('确定删除？')){ state.cards=state.cards.filter(c=>c.id!==id); render(); }} if(b.dataset.action==='add-campaign-for-card'){ const c=state.cards.find(x=>x.id===id); if(c) openCampaignDialog({cards:`${c.bank} ${cardName(c)} 尾号${c.last4||'未填'}`}); } if(b.dataset.action==='edit-campaign') openCampaignDialog(state.campaigns.find(a=>a.id===id)); });
-els.exportBtn.addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='信用卡档案.json'; a.click(); URL.revokeObjectURL(url); }); els.importInput.addEventListener('change',async e=>{ const f=e.target.files?.[0]; if(!f) return; state=JSON.parse(await f.text()); render(); }); els.resetBtn.addEventListener('click',()=>{ if(confirm('恢复空数据？')){state={cards:[],campaigns:[]}; render();}});
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state, null, 2)); }
+function makeId() { return globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(16).slice(2)}`; }
+function esc(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
+function splitTags(value) { if (Array.isArray(value)) return value.map((x) => String(x).trim()).filter(Boolean); return String(value || "").split(/[,，、\s;；]+/).map((x) => x.trim()).filter(Boolean); }
+function nextMonthlyDate(day) { if (!day) return null; const now = new Date(); now.setHours(0,0,0,0); let date = new Date(now.getFullYear(), now.getMonth(), Math.min(Number(day), 28)); if (date < now) date = new Date(now.getFullYear(), now.getMonth() + 1, Math.min(Number(day), 28)); return date; }
+function daysUntil(date) { if (!date) return Infinity; const now = new Date(); now.setHours(0,0,0,0); return Math.round((date - now) / 86400000); }
+function fmtDate(date) { if (!date) return "未设置"; return `${date.getMonth() + 1}月${date.getDate()}日`; }
+function money(value) { const match = String(value || "").replaceAll(",", "").match(/\d+(\.\d+)?/); return match ? Number(match[0]) : 0; }
+function directCashbackScore(card) { const text = [card.cashbackType, card.cashbackRate, card.useTags].flat().join(" ").toLowerCase(); return /返利|返现|cashback|账单抵扣|现金/.test(text) ? 100 + money(card.cashbackRate) : 0; }
+function cardScore(card) { let score = 0; const payDays = daysUntil(nextMonthlyDate(card.paymentDay)); if (payDays > 0 && Number.isFinite(payDays)) score += payDays; if (directCashbackScore(card)) score += 20; if (card.status !== "正常" && card.status !== "备用") score -= 100; return score; }
+
+function filteredCards() {
+  const keyword = (els.searchInput.value || "").trim().toLowerCase();
+  const status = els.statusFilter.value;
+  let cards = state.cards.filter((card) => {
+    const text = [card.bank, card.name, card.last4, card.network, card.useTags, card.notes, card.bindings, card.cashbackType, card.cashbackRate].flat().join(" ").toLowerCase();
+    return (status === "all" || card.status === status) && (!keyword || text.includes(keyword));
+  });
+  if (els.sortMode.value === "cashback") cards = cards.filter((card) => directCashbackScore(card));
+  return cards.sort((a, b) => {
+    const mode = els.sortMode.value;
+    if (mode === "statement" || mode === "statementBest") return Number(a.statementDay || 99) - Number(b.statementDay || 99);
+    if (mode === "payment") return Number(a.paymentDay || 99) - Number(b.paymentDay || 99);
+    if (mode === "creditLimit") return money(b.creditLimit) - money(a.creditLimit);
+    if (mode === "cashback") return directCashbackScore(b) - directCashbackScore(a);
+    return cardScore(b) - cardScore(a);
+  });
+}
+
+function renderSummary() {
+  const byBank = new Map();
+  state.cards.filter((card) => card.status !== "已注销").forEach((card) => { if (!card.bank) return; byBank.set(card.bank, Math.max(byBank.get(card.bank) || 0, money(card.creditLimit))); });
+  const total = [...byBank.values()].reduce((sum, value) => sum + value, 0);
+  els.summaryStrip.innerHTML = `<div class="summary-item"><span>本人总额度</span><strong>${total ? `${total.toLocaleString("zh-CN")} CNY` : "未录入"}</strong><small>同一银行取最高额度</small></div><div class="summary-item"><span>有效卡片</span><strong>${state.cards.filter((card) => card.status !== "已注销").length} 张</strong><small>本机保存</small></div><div class="summary-item"><span>活动</span><strong>${state.campaigns.length} 个</strong><small>绑定具体卡片</small></div>`;
+}
+
+function renderRecommendation() {
+  const best = [...state.cards].filter((card) => card.status === "正常" || card.status === "备用").sort((a, b) => cardScore(b) - cardScore(a))[0];
+  els.recommendationCard.innerHTML = best ? `<div><div class="recommend-title">今日适合用卡</div><h2>${esc(best.bank || "未填写银行")}</h2><div class="recommend-card-name">${esc(best.name || "未命名卡片")} · 尾号 ${esc(best.last4 || "未填")}</div></div><div class="reason-list"><span class="reason-chip">距还款约 ${daysUntil(nextMonthlyDate(best.paymentDay))} 天</span>${directCashbackScore(best) ? '<span class="reason-chip">返利卡</span>' : ""}</div>` : `<div><div class="recommend-title">今日适合用卡</div><h2>暂无卡片</h2><div class="recommend-card-name">先新增一张卡</div></div>`;
+}
+
+function renderCards() { const cards = filteredCards(); els.cardCount.textContent = `${cards.length} 张`; els.cardList.innerHTML = cards.length ? cards.map(cardHtml).join("") : `<div class="empty">暂无卡片</div>`; }
+function cardHtml(card) {
+  const tags = splitTags(card.useTags).map((tag) => `<span class="tag">${esc(tag)}</span>`).join("");
+  return `<article class="credit-card"><div class="card-top"><div><div class="bank-name">${esc(card.bank || "未填写银行")}</div><div class="card-title">${esc(card.name || "未命名卡片")}</div><div class="card-subtitle">${esc(card.network || "")}${card.spendingCurrency ? ` · ${esc(card.spendingCurrency)}` : ""} · 尾号 ${esc(card.last4 || "未填")}</div></div><span class="status-pill">${esc(card.status || "正常")}</span></div><div class="metrics"><div class="metric"><span>账单日</span><strong>${esc(card.statementDay || "未设")}</strong></div><div class="metric"><span>还款日</span><strong>${esc(card.paymentDay || "未设")}</strong></div><div class="metric"><span>年费</span><strong>${esc(card.annualFeeRule || "未设")}</strong></div></div><div class="tag-row">${tags}</div><div class="note-block">${esc(card.bindings || card.notes || "暂无备注")}</div><div class="note-block">返利：${esc(card.cashbackType || "未设置")} ${esc(card.cashbackRate || "")} · 额度：${esc(card.creditLimit || "未设置")} ${esc(card.currency || "")}</div><div class="note-block">消费/结算货币：${esc(card.spendingCurrency || "未设置")}</div><div class="card-actions"><button class="small-btn" data-action="edit-card" data-id="${card.id}">编辑</button><button class="small-btn" data-action="add-campaign-for-card" data-id="${card.id}">添加活动</button><button class="small-btn danger-text" data-action="delete-card" data-id="${card.id}">删除</button></div></article>`;
+}
+
+function renderReminders() {
+  const items = [];
+  state.cards.forEach((card) => { if (card.paymentDay) items.push({ type: "还款", date: nextMonthlyDate(card.paymentDay), title: `${card.bank} ${card.name || ""} 还款日`, meta: "确认是否已还款" }); if (card.statementDay) items.push({ type: "账单", date: nextMonthlyDate(card.statementDay), title: `${card.bank} ${card.name || ""} 账单日`, meta: "账单日后适合拉长还款周期" }); });
+  state.campaigns.forEach((campaign) => { if (campaign.end) items.push({ type: "活动", date: new Date(`${campaign.end}T00:00:00`), title: `${campaign.name} 结束`, meta: campaign.rule || campaign.cards || "" }); });
+  items.sort((a, b) => a.date - b.date);
+  els.remindersList.innerHTML = items.length ? items.map((item) => `<article class="timeline-item"><div class="date-badge"><strong>${fmtDate(item.date)}</strong><span>${daysUntil(item.date)}天</span></div><div><div class="timeline-title">${esc(item.title)}</div><div class="timeline-meta">${esc(item.meta)}</div></div><span class="status-pill">${esc(item.type)}</span></article>`).join("") : `<div class="empty">暂无提醒</div>`;
+}
+
+function renderUsage() {
+  const scenarios = ["大额", "最长还款", "返利", "里程", "境外", "网购", "酒店", "机票", "餐饮"];
+  els.scenarioList.innerHTML = scenarios.map((scenario) => {
+    const list = [...state.cards].filter((card) => card.status === "正常" || card.status === "备用").sort((a, b) => { if (scenario === "返利") return directCashbackScore(b) - directCashbackScore(a); if (scenario === "最长还款") return daysUntil(nextMonthlyDate(b.paymentDay)) - daysUntil(nextMonthlyDate(a.paymentDay)); return (splitTags(b.useTags).includes(scenario) ? 1 : 0) - (splitTags(a.useTags).includes(scenario) ? 1 : 0); }).slice(0, 3);
+    return `<article class="scenario-card"><h3>${scenario}</h3><p>根据卡片档案字段筛选。</p>${list.map((card) => `<div class="credit-mini"><strong>${esc(card.bank)} ${esc(card.name || "")} · ${esc(card.last4 || "未填")}</strong><p>${esc(splitTags(card.useTags).join("；") || "备选")}</p></div>`).join("")}</article>`;
+  }).join("");
+}
+
+function renderCampaigns() { els.campaignList.innerHTML = state.campaigns.length ? state.campaigns.map((campaign) => `<article class="campaign-card"><div><h3>${esc(campaign.name)}</h3><p>${esc(campaign.source || "活动")} · ${esc(campaign.cards)}</p><p>${esc(campaign.rule)}</p><div class="tag-row"><span class="tag">${esc(campaign.start || "未设")} 至 ${esc(campaign.end || "未设")}</span><span class="tag">${esc(campaign.status || "未用")}</span></div></div><div class="campaign-actions"><button class="small-btn" data-action="edit-campaign" data-id="${campaign.id}">编辑</button></div></article>`).join("") : `<div class="empty">暂无活动</div>`; }
+function renderData() { els.dataPreview.value = JSON.stringify(state, null, 2); }
+function render() { els.todayText.textContent = `${new Date().toLocaleDateString("zh-CN")} · APK测试版 ${BUILD}`; renderSummary(); renderRecommendation(); renderCards(); renderReminders(); renderUsage(); renderCampaigns(); renderData(); saveState(); }
+function setView(view) { document.querySelectorAll(".view").forEach((node) => node.classList.remove("active")); document.querySelector(`#${view}View`).classList.add("active"); els.tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.view === view)); }
+
+function openCardDialog(card = null) {
+  cardFields.cardId.value = card?.id || ""; cardFields.bank.value = card?.bank || ""; cardFields.cardName.value = card?.name || ""; cardFields.network.value = card?.network || "Visa"; cardFields.spendingCurrency.value = card?.spendingCurrency || ""; cardFields.last4.value = card?.last4 || ""; cardFields.holder.value = card?.holder || "本人"; cardFields.status.value = card?.status || "正常"; cardFields.statementDay.value = card?.statementDay || ""; cardFields.paymentDay.value = card?.paymentDay || ""; cardFields.annualFeeDay.value = card?.annualFeeDate || ""; cardFields.annualFeeRule.value = card?.annualFeeRule || "终身免年费"; cardFields.creditLimit.value = card?.creditLimit || ""; cardFields.currency.value = card?.currency || ""; cardFields.useTags.value = splitTags(card?.useTags).join(", "); cardFields.avoidTags.value = splitTags(card?.avoidTags).join(", "); cardFields.bindings.value = card?.bindings || ""; cardFields.replacement.value = card?.replacement || ""; cardFields.notes.value = card?.notes || ""; cardFields.cashbackType.value = card?.cashbackType || ""; cardFields.cashbackRate.value = card?.cashbackRate || ""; cardFields.rewardProgram.value = card?.rewardProgram || ""; cardFields.benefitResetCycle.value = card?.benefitResetCycle || "未知"; els.cardDialog.showModal();
+}
+function saveCard() {
+  const card = { id: cardFields.cardId.value || makeId(), bank: cardFields.bank.value.trim(), name: cardFields.cardName.value.trim(), network: cardFields.network.value, spendingCurrency: cardFields.spendingCurrency.value.trim(), last4: cardFields.last4.value.trim().slice(-4), holder: cardFields.holder.value.trim() || "本人", status: cardFields.status.value, statementDay: cardFields.statementDay.value, paymentDay: cardFields.paymentDay.value, annualFeeDate: cardFields.annualFeeDay.value, annualFeeRule: cardFields.annualFeeRule.value, creditLimit: cardFields.creditLimit.value.trim(), currency: cardFields.currency.value.trim(), useTags: cardFields.useTags.value, avoidTags: cardFields.avoidTags.value, bindings: cardFields.bindings.value.trim(), replacement: cardFields.replacement.value.trim(), notes: cardFields.notes.value.trim(), cashbackType: cardFields.cashbackType.value.trim(), cashbackRate: cardFields.cashbackRate.value.trim(), rewardProgram: cardFields.rewardProgram.value.trim(), benefitResetCycle: cardFields.benefitResetCycle.value };
+  const index = state.cards.findIndex((item) => item.id === card.id); if (index >= 0) state.cards[index] = card; else state.cards.unshift(card); render();
+}
+function openCampaignDialog(campaign = null) { campaignFields.campaignId.value = campaign?.id || ""; campaignFields.campaignName.value = campaign?.name || ""; campaignFields.campaignSource.value = campaign?.source || ""; campaignFields.campaignStart.value = campaign?.start || ""; campaignFields.campaignEnd.value = campaign?.end || ""; campaignFields.campaignCards.value = campaign?.cards || ""; campaignFields.campaignRule.value = campaign?.rule || ""; campaignFields.campaignStatus.value = campaign?.status || "未用"; els.campaignDialog.showModal(); }
+function saveCampaign() { if (!campaignFields.campaignCards.value.trim()) return alert("请填写适用卡。"); const campaign = { id: campaignFields.campaignId.value || makeId(), name: campaignFields.campaignName.value.trim(), source: campaignFields.campaignSource.value.trim(), start: campaignFields.campaignStart.value, end: campaignFields.campaignEnd.value, cards: campaignFields.campaignCards.value.trim(), rule: campaignFields.campaignRule.value.trim(), status: campaignFields.campaignStatus.value }; const index = state.campaigns.findIndex((item) => item.id === campaign.id); if (index >= 0) state.campaigns[index] = campaign; else state.campaigns.unshift(campaign); render(); }
+
+els.tabs.forEach((tab) => tab.addEventListener("click", () => setView(tab.dataset.view)));
+els.searchInput.addEventListener("input", renderCards);
+els.statusFilter.addEventListener("change", renderCards);
+els.sortMode.addEventListener("change", renderCards);
+document.querySelectorAll(".quick-view").forEach((button) => button.addEventListener("click", () => { els.sortMode.value = button.dataset.sort; setView("cards"); renderCards(); }));
+els.addCardBtn.addEventListener("click", () => openCardDialog());
+els.addCampaignBtn.addEventListener("click", () => openCampaignDialog());
+els.cardForm.addEventListener("submit", (event) => { if (event.submitter?.value === "cancel") return; event.preventDefault(); saveCard(); els.cardDialog.close(); });
+els.campaignForm.addEventListener("submit", (event) => { if (event.submitter?.value === "cancel") return; event.preventDefault(); saveCampaign(); els.campaignDialog.close(); });
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-action]"); if (!button) return;
+  const { action, id } = button.dataset;
+  if (action === "edit-card") openCardDialog(state.cards.find((card) => card.id === id));
+  if (action === "delete-card") { state.cards = state.cards.filter((card) => card.id !== id); render(); }
+  if (action === "add-campaign-for-card") { const card = state.cards.find((item) => item.id === id); if (card) openCampaignDialog({ cards: `${card.bank} ${card.name || ""} 尾号${card.last4 || "未填"}`, status: "未用" }); }
+  if (action === "edit-campaign") openCampaignDialog(state.campaigns.find((campaign) => campaign.id === id));
+});
+
+els.exportBtn.addEventListener("click", () => { const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "信用卡档案.json"; link.click(); URL.revokeObjectURL(link.href); });
+els.importInput.addEventListener("change", async (event) => { const file = event.target.files?.[0]; if (!file) return; try { state = JSON.parse(await file.text()); render(); } catch { alert("导入失败"); } });
+els.resetBtn.addEventListener("click", () => { if (confirm("确定清空并恢复空数据？")) { state = { cards: [], campaigns: [] }; render(); } });
+
 render();
