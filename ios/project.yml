@@ -6,8 +6,8 @@ settings:
   base:
     SWIFT_VERSION: "5.0"
     PRODUCT_BUNDLE_IDENTIFIER: cn.creditcard.archive
-    MARKETING_VERSION: "0.3.1"
-    CURRENT_PROJECT_VERSION: "7"
+    MARKETING_VERSION: "0.3.2"
+    CURRENT_PROJECT_VERSION: "8"
     TARGETED_DEVICE_FAMILY: "1,2"
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: "YES"
@@ -22,10 +22,10 @@ targets:
     type: application
     platform: iOS
     sources:
-      - CreditCardArchive/AppDelegate.swift
-      - CreditCardArchive/WebViewController.swift
-      - CreditCardArchive/LaunchScreen.storyboard
-      - CreditCardArchive/Assets.xcassets
+      - path: CreditCardArchive
+        excludes:
+          - Info.plist
+          - www/**
     info:
       path: CreditCardArchive/Info.plist
       properties:
