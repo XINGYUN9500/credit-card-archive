@@ -1,0 +1,21 @@
+name: CreditCardArchive
+options:
+  deploymentTarget:
+    iOS: "14.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    PRODUCT_BUNDLE_IDENTIFIER: cn.creditcard.archive
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  CreditCardArchive:
+    type: application
+    platform: iOS
+    sources:
+      - CreditCardArchive/AppDelegate.swift
+      - CreditCardArchive/WebViewController.swift
+    resources:
+      - CreditCardArchive/www
+    info:
+      path: CreditCardArchive/Info.plist
