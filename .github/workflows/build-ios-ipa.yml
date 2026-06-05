@@ -31,7 +31,7 @@ jobs:
           set -o pipefail
           xcodebuild \
             -project ios/CreditCardArchive.xcodeproj \
-            -target CreditCardArchive \
+            -scheme CreditCardArchive \
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath build/ios \
