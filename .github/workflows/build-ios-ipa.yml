@@ -46,6 +46,16 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="" \
             clean build 2>&1 | tee build-ios.log
 
+      - name: Inspect app bundle
+        run: |
+          APP=build/ios/Build/Products/Release-iphoneos/CreditCardArchive.app
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :UILaunchStoryboardName' "$APP/Info.plist"
+          test -f "$APP/Assets.car"
+          test -d "$APP/Base.lproj"
+          find "$APP" -maxdepth 2 -type f | sort
+
       - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4
