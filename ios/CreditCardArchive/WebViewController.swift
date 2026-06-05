@@ -16,10 +16,14 @@ final class WebViewController: UIViewController, WKNavigationDelegate {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
 
-        guard let url = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "www") else {
-            webView.loadHTMLString("<h1>Missing www/index.html</h1>", baseURL: nil)
+        let bundledUrl = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "www")
+            ?? Bundle.main.url(forResource: "index", withExtension: "html")
+
+        guard let url = bundledUrl else {
+            webView.loadHTMLString("<h1>Missing bundled index.html</h1>", baseURL: nil)
             return
         }
+
         webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
     }
 }
