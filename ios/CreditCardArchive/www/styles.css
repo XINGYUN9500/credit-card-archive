@@ -1,0 +1,45 @@
+:root {
+  color-scheme: light;
+  --bg: #f7faf8;
+  --text: #14211f;
+  --muted: #6b7b78;
+  --line: #dce8e4;
+  --brand: #0f766e;
+  --soft: #eaf5f1;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); }
+button, input, select, textarea { font: inherit; }
+button { border: 1px solid var(--line); background: white; border-radius: 8px; padding: 10px 12px; font-weight: 700; }
+.app { padding: max(14px, env(safe-area-inset-top)) 14px max(24px, env(safe-area-inset-bottom)); max-width: 760px; margin: 0 auto; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+h1 { margin: 0; font-size: 30px; }
+p { margin: 4px 0 0; color: var(--muted); }
+.topbar button, .dialog-actions button[type="submit"], .data-actions button:first-child { background: var(--brand); color: white; border-color: var(--brand); }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 18px 0; }
+.tab.active { background: var(--soft); color: var(--brand); border-color: #badbd5; }
+.panel { display: none; }
+.panel.active { display: block; }
+.toolbar { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 12px; }
+input, select, textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; background: white; color: var(--text); }
+textarea { min-height: 110px; resize: vertical; }
+.list { display: grid; gap: 10px; }
+.card { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 14px; box-shadow: 0 8px 24px rgba(20, 33, 31, .06); }
+.card h2, .card h3 { margin: 0 0 4px; font-size: 20px; }
+.meta { color: var(--muted); line-height: 1.55; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip { background: var(--soft); color: #244b46; border-radius: 999px; padding: 5px 9px; font-weight: 700; font-size: 13px; }
+.actions { display: flex; gap: 8px; margin-top: 12px; }
+.actions button { padding: 8px 10px; }
+.danger { color: #b42318; }
+.data-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+#dataBox { min-height: 58vh; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+dialog { width: min(94vw, 620px); border: 0; border-radius: 12px; padding: 0; }
+dialog::backdrop { background: rgba(0, 0, 0, .35); }
+form { padding: 14px; display: grid; gap: 10px; }
+.dialog-head, .dialog-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dialog-head h2 { margin: 0; }
+label { display: grid; gap: 5px; color: var(--muted); font-weight: 700; }
+label input, label textarea { color: var(--text); font-weight: 400; }
