@@ -22,11 +22,9 @@ targets:
     type: application
     platform: iOS
     sources:
-      - CreditCardArchive/AppDelegate.swift
-      - CreditCardArchive/WebViewController.swift
-    resources:
-      - CreditCardArchive/Assets.xcassets
-      - CreditCardArchive/LaunchScreen.storyboard
+      - path: CreditCardArchive
+        excludes:
+          - Info.plist
     info:
       path: CreditCardArchive/Info.plist
       properties:
