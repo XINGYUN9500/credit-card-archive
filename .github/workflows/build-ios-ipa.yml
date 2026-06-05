@@ -21,6 +21,9 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
+      - name: Generate app icon assets
+        run: python3 ios/scripts/make_app_icon.py
+
       - name: Generate Xcode project
         run: |
           cd ios
